@@ -17,6 +17,7 @@ streznik.set('view engine', 'ejs');
 streznik.use(express.static('public'));
 streznik.use(
   expressSession({
+    uporabnik: "",              // uporabnik
     secret: '1234567890QWERTY', // Skrivni ključ za podpisovanje piškotkov
     saveUninitialized: true,    // Novo sejo shranimo
     resave: false,              // Ne zahtevamo ponovnega shranjevanja
@@ -110,9 +111,10 @@ var pesmiIzKosarice = function(zahteva, callback) {
     })
   }
 }
-
+//?todo?
 streznik.get('/kosarica', function(zahteva, odgovor) {
   pesmiIzKosarice(zahteva, function(pesmi) {
+    if (zahteva.session.uporabnik == "") odgovor.redirect('/prijava');
     if (!pesmi)
       odgovor.sendStatus(500);
     else
@@ -231,8 +233,6 @@ streznik.post('/prijava', function(zahteva, odgovor) {
             });
           });
     }
-    //odgovor.end();
-    
   });
 });
 
@@ -240,22 +240,26 @@ streznik.post('/prijava', function(zahteva, odgovor) {
 streznik.get('/prijava', function(zahteva, odgovor) {
   vrniStranke(function(napaka1, stranke) {
       vrniRacune(function(napaka2, racuni) {
-        odgovor.render('prijava', {sporocilo: "", seznamStrank: stranke, seznamRacunov: racuni});  
+        odgovor.render('prijava', {sporocilo: "", seznamStrank: stranke, seznamRacunov: racuni}); 
       });
     });
 });
-
+//todo
 // Prikaz nakupovalne košarice za stranko
 streznik.post('/stranka', function(zahteva, odgovor) {
   var form = new formidable.IncomingForm();
+  
+  zahteva.session.uporabnik = zahteva.seznamStrank;
+  console.log(zahteva.session.uporabnik + " jebemti");
   
   form.parse(zahteva, function (napaka1, polja, datoteke) {
     odgovor.redirect('/');
   });
 });
-
+//?todo?
 // Odjava stranke
 streznik.post('/odjava', function(zahteva, odgovor) {
+    zahteva.session.uporabnik = "";
     odgovor.redirect('/prijava');
 });
 

@@ -133,23 +133,44 @@ var pesmiIzRacuna = function(racunId, callback) {
     Track.TrackId IN (SELECT InvoiceLine.TrackId FROM InvoiceLine, Invoice \
     WHERE InvoiceLine.InvoiceId = Invoice.InvoiceId AND Invoice.InvoiceId = " + racunId + ")",
     function(napaka, vrstice) {
-      console.log(vrstice);
-    })
-}
+      callback(napaka, vrstice);
+    });
+};
 
 // Vrni podrobnosti o stranki iz računa
 var strankaIzRacuna = function(racunId, callback) {
     pb.all("SELECT Customer.* FROM Customer, Invoice \
             WHERE Customer.CustomerId = Invoice.CustomerId AND Invoice.InvoiceId = " + racunId,
     function(napaka, vrstice) {
-      console.log(vrstice);
-    })
-}
+      callback(napaka, vrstice);
+    });
+};
 
 // Izpis računa v HTML predstavitvi na podlagi podatkov iz baze
 streznik.post('/izpisiRacunBaza', function(zahteva, odgovor) {
-  odgovor.end();
-})
+    var form = new formidable.IncomingForm();
+    var napaka1 = false;
+  form.parse(zahteva, function (napaka1, polja, datoteke) {
+    if (!napaka1) {
+      strankaIzRacuna(polja.seznamRacunov, function (napaka1, stranka) {
+        if (!napaka1) {
+          pesmiIzRacuna(polja.seznamRacunov, function(napaka1, pesmi) {
+            if(!napaka1) {
+              odgovor.setHeader('content-type', 'text/xml');
+              odgovor.render('eslog',{vizualiziraj: true, postavkeRacuna: pesmi, stranka: stranka[0]});
+            } else {
+              odgovor.status(500).send('Prišlo je do napake!');
+            }
+          });
+        } else {
+          odgovor.status(500).send('Prišlo je do napake!');
+        }
+      });
+    } else {
+      odgovor.status(500).send('Prišlo je do napake!');
+    }
+  });
+});
 
 // Izpis računa v HTML predstavitvi ali izvorni XML obliki
 streznik.get('/izpisiRacun/:oblika', function(zahteva, odgovor) {
@@ -164,10 +185,10 @@ streznik.get('/izpisiRacun/:oblika', function(zahteva, odgovor) {
       odgovor.render('eslog', {
         vizualiziraj: zahteva.params.oblika == 'html' ? true : false,
         postavkeRacuna: pesmi
-      })  
+      });
     }
-  })
-})
+  });
+});
 
 // Privzeto izpiši račun v HTML obliki
 streznik.get('/izpisiRacun', function(zahteva, odgovor) {

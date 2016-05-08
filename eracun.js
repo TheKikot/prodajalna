@@ -114,16 +114,11 @@ var pesmiIzKosarice = function(zahteva, callback) {
       }
     });
   }
-<<<<<<< HEAD
-}
-//?todo?
-=======
 };
 
->>>>>>> prijava
 streznik.get('/kosarica', function(zahteva, odgovor) {
   pesmiIzKosarice(zahteva, function(pesmi) {
-    if (zahteva.session.uporabnik == "") odgovor.redirect('/prijava');
+    if (zahteva.session.uporabnik == undefined) odgovor.redirect('/prijava');
     if (!pesmi)
       odgovor.sendStatus(500);
     else
@@ -190,8 +185,7 @@ var vrniStranke = function(callback) {
   pb.all("SELECT * FROM Customer",
     function(napaka, vrstice) {
       callback(napaka, vrstice);
-    }
-  );
+    });
 };
 
 // Vrni račune iz podatkovne baze
@@ -202,8 +196,7 @@ var vrniRacune = function(callback) {
           WHERE Customer.CustomerId = Invoice.CustomerId",
     function(napaka, vrstice) {
       callback(napaka, vrstice);
-    }
-  );
+    });
 };
 
 // Registracija novega uporabnika
@@ -229,18 +222,18 @@ streznik.post('/prijava', function(zahteva, odgovor) {
     
     if (napaka2) {
         vrniStranke(function(napaka1, stranke) {
-            vrniRacune(function(napaka2, racuni) {
-              odgovor.render('prijava', {sporocilo: "Prišlo je do napake pri registraciji nove stranke. \
-              Prosim preverite vnešene podatke in poskusite znova.", seznamStrank: stranke, seznamRacunov: racuni});  
-            });
+          vrniRacune(function(napaka2, racuni) {
+            odgovor.render('prijava', {sporocilo: "Prišlo je do napake pri registraciji nove stranke. \
+            Prosim preverite vnešene podatke in poskusite znova.", seznamStrank: stranke, seznamRacunov: racuni});  
           });
+        });
     
     } else {
         vrniStranke(function(napaka1, stranke) {
-            vrniRacune(function(napaka2, racuni) {
-              odgovor.render('prijava', {sporocilo: "Stranka je bila uspešno registrirana.", seznamStrank: stranke, seznamRacunov: racuni});  
-            });
+          vrniRacune(function(napaka2, racuni) {
+            odgovor.render('prijava', {sporocilo: "Stranka je bila uspešno registrirana.", seznamStrank: stranke, seznamRacunov: racuni});  
           });
+        });
     }
   });
 });
